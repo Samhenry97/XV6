@@ -1,0 +1,50 @@
+struct file {
+  enum { FD_NONE, FD_PIPE, FD_INODE } type;
+  int ref; // reference count
+  char readable;
+  char writable;
+  struct pipe *pipe;
+  struct inode *ip;
+  uint off;
+};
+
+
+// in-memory copy of an inode
+struct inode {
+  uint dev;           // Device number
+  uint inum;          // Inode number
+  int ref;            // Reference count
+  struct sleeplock lock;
+  int flags;          // I_VALID
+
+  uint owner;     // User ID of file owner
+  uint permissions;    // Bitfield used for file permissions
+  short type;         // copy of disk inode
+  short major;
+  short minor;
+  short nlink;
+  uint size;
+  uint addrs[NDIRECT+1];
+  char mount;         // 'Y' or 'N'
+};
+#define I_VALID 0x2
+
+// table mapping major device number to
+// device functions
+struct devsw {
+  int (*read)(struct inode*, char*, int);
+  int (*write)(struct inode*, char*, int);
+  void (*ioctl)(struct inode*, int, int);
+  int (*seek)(struct inode*, int);
+};
+
+extern struct devsw devsw[];
+
+#define CONSOLE 1
+#define DEVNULL 5
+#define DEVZERO 6
+#define DEVRAND 7
+#define IDE 8
+
+//PAGEBREAK!
+// Blank page.
